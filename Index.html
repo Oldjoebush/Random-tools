@@ -1,0 +1,207 @@
+<!DOCTYPE html><html>
+<head>
+  <title>Dev Toolbox</title>
+  <style>
+    body { margin: 0; font-family: sans-serif; display: flex; }
+    nav { width: 200px; background: #333; color: #fff; padding: 10px; height: 100vh; box-sizing: border-box; }
+    nav button { width: 100%; margin: 5px 0; padding: 10px; background: #444; color: #fff; border: none; cursor: pointer; }
+    nav button:hover { background: #555; }
+    #app { flex: 1; padding: 20px; box-sizing: border-box; }
+    input, button, textarea { margin: 5px 0; padding: 5px; }
+  </style>
+</head>
+<body>
+  <nav id="menu"></nav>
+  <div id="app">Select a tool from the menu.</div>
+  <script>
+    const tools = {
+      'To-Do List': () => `
+        <h2>To-Do List</h2>
+        <input id="todo-input" placeholder="New task">
+        <button onclick="addTodo()">Add</button>
+        <ul id="todo-list"></ul>
+        <script>
+          let todos = JSON.parse(localStorage.getItem('todos') || '[]');
+          const renderTodos = () => {
+            document.getElementById('todo-list').innerHTML = todos.map((t, i) => `<li>${t} <button onclick='removeTodo(${i})'>x</button></li>`).join('');
+          };
+          const addTodo = () => {
+            const val = document.getElementById('todo-input').value;
+            if (val) todos.push(val);
+            localStorage.setItem('todos', JSON.stringify(todos));
+            renderTodos();
+          };
+          const removeTodo = i => {
+            todos.splice(i, 1);
+            localStorage.setItem('todos', JSON.stringify(todos));
+            renderTodos();
+          };
+          renderTodos();
+        </script>`
+      ,'Pomodoro Timer': () => `
+    <h2>Pomodoro Timer</h2>
+    <p id="timer">25:00</p>
+    <button onclick="startPomodoro()">Start</button>
+    <button onclick="resetPomodoro()">Reset</button>
+    <script>
+      let time = 1500, interval;
+      const updateTimer = () => {
+        let min = Math.floor(time / 60);
+        let sec = time % 60;
+        document.getElementById('timer').textContent = `${min}:${sec.toString().padStart(2, '0')}`;
+      };
+      const startPomodoro = () => {
+        if (interval) return;
+        interval = setInterval(() => {
+          if (time > 0) {
+            time--;
+            updateTimer();
+          } else {
+            clearInterval(interval);
+          }
+        }, 1000);
+      };
+      const resetPomodoro = () => {
+        clearInterval(interval);
+        interval = null;
+        time = 1500;
+        updateTimer();
+      };
+      updateTimer();
+    </script>`
+  ,
+
+  'Password Generator': () => `
+    <h2>Password Generator</h2>
+    <input type="number" id="pw-len" value="12" min="4" max="64">
+    <button onclick="generatePassword()">Generate</button>
+    <p id="password"></p>
+    <script>
+      const generatePassword = () => {
+        const len = +document.getElementById('pw-len').value;
+        const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()';
+        let pw = '';
+        for (let i = 0; i < len; i++) pw += chars[Math.floor(Math.random() * chars.length)];
+        document.getElementById('password').textContent = pw;
+      };
+    </script>`
+  ,
+
+  'Color Palette Generator': () => `
+    <h2>Color Palette</h2>
+    <button onclick="generateColors()">Generate</button>
+    <div id="colors"></div>
+    <script>
+      const generateColors = () => {
+        const wrap = document.getElementById('colors');
+        wrap.innerHTML = '';
+        for (let i = 0; i < 5; i++) {
+          const color = '#' + Math.floor(Math.random() * 0xffffff).toString(16).padStart(6, '0');
+          const div = document.createElement('div');
+          div.textContent = color;
+          div.style.background = color;
+          div.style.color = '#fff';
+          div.style.padding = '10px';
+          wrap.appendChild(div);
+        }
+      };
+    </script>`
+  ,
+
+  'Calculator': () => `
+    <h2>Calculator</h2>
+    <input id="calc" placeholder="e.g. 5+5">
+    <button onclick="calcResult()">=</button>
+    <p id="calc-result"></p>
+    <script>
+      const calcResult = () => {
+        const expr = document.getElementById('calc').value;
+        try {
+          document.getElementById('calc-result').textContent = eval(expr);
+        } catch {
+          document.getElementById('calc-result').textContent = 'Error';
+        }
+      };
+    </script>`
+  ,
+
+  'Quote of the Day': () => `
+    <h2>Quote of the Day</h2>
+    <button onclick="getQuote()">Get Quote</button>
+    <blockquote id="quote"></blockquote>
+    <script>
+      const quotes = [
+        'Do or do not. There is no try.',
+        'Stay hungry, stay foolish.',
+        'Good artists copy, great artists steal.',
+        'Simplicity is the ultimate sophistication.'
+      ];
+      const getQuote = () => {
+        document.getElementById('quote').textContent = quotes[Math.floor(Math.random() * quotes.length)];
+      };
+    </script>`
+  ,
+
+  'Stopwatch': () => `
+    <h2>Stopwatch</h2>
+    <p id="sw-time">0.0</p>
+    <button onclick="swStart()">Start</button>
+    <button onclick="swStop()">Stop</button>
+    <button onclick="swReset()">Reset</button>
+    <script>
+      let sw = 0, swInt;
+      const swStart = () => { if (!swInt) swInt = setInterval(() => { sw += 0.1; document.getElementById('sw-time').textContent = sw.toFixed(1); }, 100); };
+      const swStop = () => { clearInterval(swInt); swInt = null; };
+      const swReset = () => { sw = 0; swStop(); document.getElementById('sw-time').textContent = '0.0'; };
+    </script>`
+  ,
+
+  'Typing Speed Test': () => `
+    <h2>Typing Speed Test</h2>
+    <p id="test-text">The quick brown fox jumps over the lazy dog.</p>
+    <textarea id="user-input" rows="3" cols="40"></textarea>
+    <p id="wpm"></p>
+    <button onclick="startTypingTest()">Start</button>
+    <script>
+      let startTime;
+      const startTypingTest = () => {
+        startTime = Date.now();
+        document.getElementById('user-input').oninput = () => {
+          const val = document.getElementById('user-input').value;
+          if (val === document.getElementById('test-text').textContent) {
+            const time = (Date.now() - startTime) / 1000 / 60;
+            const words = val.split(' ').length;
+            document.getElementById('wpm').textContent = Math.round(words / time) + ' WPM';
+          }
+        };
+      };
+    </script>`
+  ,
+
+  'Markdown Previewer': () => `
+    <h2>Markdown Previewer</h2>
+    <textarea id="md-input" rows="5" cols="40" oninput="mdPreview()"># Hello</textarea>
+    <div id="md-output"></div>
+    <script>
+      const mdPreview = () => {
+        let val = document.getElementById('md-input').value;
+        val = val.replace(/# (.*)/g, '<h1>$1</h1>').replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+        document.getElementById('md-output').innerHTML = val;
+      };
+      mdPreview();
+    </script>`
+};
+
+const menu = document.getElementById('menu');
+const app = document.getElementById('app');
+
+for (const name in tools) {
+  const btn = document.createElement('button');
+  btn.textContent = name;
+  btn.onclick = () => app.innerHTML = tools[name]();
+  menu.appendChild(btn);
+}
+
+  </script>
+</body>
+</html>
